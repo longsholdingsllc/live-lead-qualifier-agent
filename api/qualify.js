@@ -1,0 +1,74 @@
+// Vercel Serverless Function - Live Lead Qualification Agent
+// POST /api/qualify with JSON body of lead data
+
+export default async function handler(req, res) {
+  // Enable CORS for easy testing
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+
+  try {
+    const lead = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+
+    if (!lead || typeof lead !== 'object') {
+      return res.status(400).json({ error: 'Invalid JSON body. Send lead object.' });
+    }
+
+    // Production scoring logic (same as the n8n agent core)
+    let score = 0;
+    const reasons = [];
+
+    if (lead.title && /revenue|ops|operations|growth|automation|ai|founder|ceo|cto|head|director|vp/i.test(lead.title)) {
+      score += 30;
+      reasons.push('Title indicates decision-maker in relevant function (+30)');
+    }
+    if (lead.message && /automation|ai|manual|leads|crm|workflow|agent|n8n|zapier|make/i.test(lead.message)) {
+      score += 35;
+      reasons.push('Message describes clear automation / AI pain point (+35)');
+    }
+    if (lead.budget && /\d{3,}|k|thousand|budget/i.test(String(lead.budget))) {
+      score += 20;
+      reasons.push('Budget signal present (+20)');
+    }
+    if (lead.timeline && /quarter|month|asap|soon|this|next|urgent|immediate/i.test(String(lead.timeline))) {
+      score += 15;
+      reasons.push('Near-term timeline (+15)');
+    }
+    // Bonus for company size signals
+    if (lead.company && lead.company.length > 2) {
+      score += 5;
+      reasons.push('Company identified (+5)');
+    }
+
+    const action = score >= 70 ? 'qualify' : score >= 40 ? 'nurture' : 'disqualify';
+
+    const result = {
+      success: true,
+      score,
+      max_score: 100,
+      recommended_action: action,
+      reason: reasons.join('; ') || 'Insufficient data for strong score',
+      summary: `Lead scored ${score}/100 → ${action.toUpperCase()}`,
+      lead_received: {
+        name: lead.name || null,
+        email: lead.email || null,
+        company: lead.company || null,
+        title: lead.title || null
+      },
+      timestamp: new Date().toISOString(),
+      agent: 'Live Lead Qualification Agent v1.0'
+    };
+
+    return res.status(200).json(result);
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal error', details: err.message });
+  }
+}
