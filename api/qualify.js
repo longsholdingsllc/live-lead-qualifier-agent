@@ -1,14 +1,42 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  // Friendly response for browser visits (GET)
+  if (req.method === 'GET') {
+    return res.status(200).json({
+      status: 'Live',
+      agent: 'Live Lead Qualification Agent v1.0',
+      message: 'This endpoint is ready. Send a POST request with a JSON body to qualify a lead.',
+      usage: {
+        method: 'POST',
+        url: 'https://live-lead-qualifier-agent.vercel.app/api/qualify',
+        headers: { 'Content-Type': 'application/json' },
+        example_body: {
+          name: 'Alex Rivera',
+          email: 'alex@growthco.io',
+          company: 'GrowthCo',
+          title: 'Head of Revenue Operations',
+          message: 'We process 200+ inbound leads per week manually. Looking for an AI system that can score and enrich them automatically before they hit our CRM.',
+          budget: '5k-15k',
+          timeline: 'this quarter'
+        }
+      },
+      curl_example: `curl -X POST https://live-lead-qualifier-agent.vercel.app/api/qualify -H "Content-Type: application/json" -d '{"name":"Alex Rivera","title":"Head of Revenue Operations","message":"Looking for AI automation","budget":"10k","timeline":"this month"}'`
+    });
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+    return res.status(405).json({
+      error: 'Method not allowed',
+      allowed: ['GET', 'POST', 'OPTIONS'],
+      message: 'Use POST with a JSON lead object to qualify. Visit the URL in a browser (GET) for usage instructions.'
+    });
   }
 
   try {
@@ -37,6 +65,9 @@ export default async function handler(req, res) {
       score += 5;
       reasons.push('Company identified (+5)');
     }
+
+    // Cap at 100 for clean reporting
+    if (score > 100) score = 100;
 
     const action = score >= 70 ? 'qualify' : score >= 40 ? 'nurture' : 'disqualify';
 
