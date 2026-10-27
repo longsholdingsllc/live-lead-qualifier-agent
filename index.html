@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Lead Qualifier — Long's Holdings LLC</title>
+<meta name="description" content="Instant, rule-based lead scoring API. POST a lead, get a 0–100 score and a qualify / nurture / disqualify recommendation in milliseconds.">
+<style>
+  :root{
+    --charcoal:#17191c; --panel:#1f2226; --panel2:#26292e; --line:#34383e;
+    --green:#3d9970; --green-bright:#4cc38a; --copper:#c5824a; --copper-bright:#e0a266;
+    --text:#ece9e2; --muted:#a7a49a; --red:#d96a5f; --amber:#d9a441;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--charcoal);color:var(--text);font-family:Georgia,'Times New Roman',serif;line-height:1.6;padding:2rem 1rem 4rem}
+  .wrap{max-width:860px;margin:0 auto}
+  .brand{font-family:Verdana,Geneva,sans-serif;font-size:.72rem;letter-spacing:.32em;text-transform:uppercase;color:var(--copper);margin-bottom:.6rem}
+  h1{font-size:2.4rem;font-weight:normal;line-height:1.15;margin-bottom:.4rem}
+  h1 .accent{color:var(--green-bright)}
+  .tagline{color:var(--muted);font-size:1.05rem;margin-bottom:2rem}
+  h2{font-family:Verdana,Geneva,sans-serif;font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:var(--copper-bright);margin:2.2rem 0 .8rem}
+  p{margin-bottom:.8rem}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.25rem 1.4rem;margin-bottom:1rem}
+  code,pre{font-family:'Courier New',monospace}
+  code{background:var(--panel2);padding:.1rem .4rem;border-radius:4px;font-size:.88em;color:var(--green-bright)}
+  pre{background:#101214;border:1px solid var(--line);border-radius:8px;padding:1rem;overflow-x:auto;font-size:.83rem;line-height:1.55;color:#d8d4c8;margin:.6rem 0}
+  .endpoint{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+  .method{background:var(--green);color:#0e1512;font-family:Verdana,sans-serif;font-weight:bold;font-size:.78rem;padding:.25rem .6rem;border-radius:5px;letter-spacing:.08em}
+  .endpoint code{font-size:1rem;background:none;padding:0;color:var(--text)}
+  table{width:100%;border-collapse:collapse;font-size:.95rem}
+  td,th{padding:.45rem .6rem;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+  th{font-family:Verdana,sans-serif;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+  td.pts{color:var(--green-bright);font-family:'Courier New',monospace;white-space:nowrap}
+  .actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.4rem}
+  .badge{font-family:Verdana,sans-serif;font-size:.75rem;letter-spacing:.1em;padding:.35rem .7rem;border-radius:20px;border:1px solid}
+  .b-q{color:var(--green-bright);border-color:var(--green)}
+  .b-n{color:var(--amber);border-color:var(--amber)}
+  .b-d{color:var(--red);border-color:var(--red)}
+  form{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  form .full{grid-column:1/-1}
+  label{display:block;font-family:Verdana,sans-serif;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.3rem}
+  input,textarea{width:100%;background:#101214;border:1px solid var(--line);border-radius:6px;color:var(--text);padding:.6rem .7rem;font-family:Georgia,serif;font-size:.95rem}
+  input:focus,textarea:focus{outline:none;border-color:var(--green)}
+  button{grid-column:1/-1;background:var(--green);color:#0e1512;border:none;border-radius:6px;padding:.8rem;font-family:Verdana,sans-serif;font-size:.85rem;font-weight:bold;letter-spacing:.12em;cursor:pointer}
+  button:hover{background:var(--green-bright)}
+  button:disabled{opacity:.55;cursor:wait}
+  #result{display:none;margin-top:1rem}
+  #result .verdict{font-family:Verdana,sans-serif;font-size:.95rem;letter-spacing:.06em;margin-bottom:.5rem}
+  .note{color:var(--muted);font-size:.92rem}
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);color:var(--muted);font-size:.88rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+  footer .fb{font-family:Verdana,sans-serif;letter-spacing:.25em;font-size:.7rem;color:var(--copper)}
+  @media(max-width:640px){form{grid-template-columns:1fr}h1{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">Long's Holdings LLC</div>
+  <h1>Live Lead <span class="accent">Qualifier</span></h1>
+  <p class="tagline">Instant, rule-based lead scoring. Send a lead, get a 0–100 score and a
+  qualify / nurture / disqualify recommendation in milliseconds — deterministic keyword rules,
+  the same result for the same lead, every time. No machine learning, no black box.</p>
+
+  <h2>The endpoint</h2>
+  <div class="panel">
+    <div class="endpoint"><span class="method">POST</span><code>/api/qualify</code></div>
+    <p class="note" style="margin-top:.7rem">Accepts a JSON lead with any of:
+    <code>name</code>, <code>email</code>, <code>company</code>, <code>title</code>,
+    <code>message</code>, <code>budget</code>, <code>timeline</code>. All fields are optional —
+    the more signal, the higher the possible score.</p>
+    <p style="margin-bottom:.2rem">Request:</p>
+    <pre>curl -X POST https://live-lead-qualifier-agent.vercel.app/api/qualify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Alex Rivera",
+    "email": "alex@growthco.io",
+    "company": "GrowthCo",
+    "title": "Head of Revenue Operations",
+    "message": "We process 200+ inbound leads per week manually. Looking for a system that can score them automatically before they hit our CRM.",
+    "budget": "5k-15k",
+    "timeline": "this quarter"
+  }'</pre>
+    <p style="margin-bottom:.2rem">Response:</p>
+    <pre>{
+  "success": true,
+  "score": 100,
+  "max_score": 100,
+  "recommended_action": "qualify",
+  "reason": "Title indicates decision-maker in relevant function (+30); ...",
+  "summary": "Lead scored 100/100 → QUALIFY",
+  "lead_received": { "name": "Alex Rivera", "email": "alex@growthco.io",
+                     "company": "GrowthCo", "title": "Head of Revenue Operations" },
+  "timestamp": "2026-10-27T14:00:00.000Z",
+  "agent": "Live Lead Qualification Agent v1.0"
+}</pre>
+  </div>
+
+  <h2>How scoring works</h2>
+  <div class="panel">
+    <table>
+      <tr><th>Signal</th><th>Rule</th><th>Points</th></tr>
+      <tr><td>Title</td><td>Decision-maker in a relevant function (revenue, ops, growth, founder, VP, director, head…)</td><td class="pts">+30</td></tr>
+      <tr><td>Message</td><td>Describes an automation / workflow / CRM pain point</td><td class="pts">+35</td></tr>
+      <tr><td>Budget</td><td>A budget signal is present</td><td class="pts">+20</td></tr>
+      <tr><td>Timeline</td><td>Near-term (this quarter, this month, ASAP…)</td><td class="pts">+15</td></tr>
+      <tr><td>Company</td><td>Company identified</td><td class="pts">+5</td></tr>
+    </table>
+    <div class="actions">
+      <span class="badge b-q">QUALIFY — 70+</span>
+      <span class="badge b-n">NURTURE — 40–69</span>
+      <span class="badge b-d">DISQUALIFY — under 40</span>
+    </div>
+    <p class="note" style="margin-top:.8rem">Leads that score <strong>qualify</strong> are automatically
+    forwarded to Long's Holdings by email — nothing hot gets thrown away.</p>
+  </div>
+
+  <h2>Try it</h2>
+  <div class="panel">
+    <form id="tryit">
+      <div><label for="f-name">Name</label><input id="f-name" autocomplete="name" placeholder="Alex Rivera"></div>
+      <div><label for="f-email">Email</label><input id="f-email" type="email" autocomplete="email" placeholder="alex@growthco.io"></div>
+      <div><label for="f-company">Company</label><input id="f-company" placeholder="GrowthCo"></div>
+      <div><label for="f-title">Title</label><input id="f-title" placeholder="Head of Revenue Operations"></div>
+      <div><label for="f-budget">Budget</label><input id="f-budget" placeholder="5k-15k"></div>
+      <div><label for="f-timeline">Timeline</label><input id="f-timeline" placeholder="this quarter"></div>
+      <div class="full"><label for="f-message">Message</label><textarea id="f-message" rows="3" placeholder="What does this lead need?"></textarea></div>
+      <button type="submit" id="go">SCORE THIS LEAD</button>
+    </form>
+    <div id="result">
+      <div class="verdict" id="verdict"></div>
+      <pre id="raw"></pre>
+    </div>
+  </div>
+
+  <footer>
+    <span class="fb">LONG'S HOLDINGS LLC</span>
+    <span>Live Lead Qualification Agent v1.0 — scores leads in real time; qualifying leads are emailed to the team.</span>
+  </footer>
+
+</div>
+<script>
+  const form = document.getElementById('tryit');
+  const resultBox = document.getElementById('result');
+  const verdict = document.getElementById('verdict');
+  const raw = document.getElementById('raw');
+  const btn = document.getElementById('go');
+  const colors = { qualify: '#4cc38a', nurture: '#d9a441', disqualify: '#d96a5f' };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lead = {
+      name: document.getElementById('f-name').value.trim(),
+      email: document.getElementById('f-email').value.trim(),
+      company: document.getElementById('f-company').value.trim(),
+      title: document.getElementById('f-title').value.trim(),
+      budget: document.getElementById('f-budget').value.trim(),
+      timeline: document.getElementById('f-timeline').value.trim(),
+      message: document.getElementById('f-message').value.trim()
+    };
+    btn.disabled = true;
+    btn.textContent = 'SCORING…';
+    try {
+      const resp = await fetch('/api/qualify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lead)
+      });
+      const data = await resp.json();
+      resultBox.style.display = 'block';
+      if (data && typeof data.score === 'number') {
+        const action = (data.recommended_action || '').toUpperCase();
+        verdict.textContent = `Score: ${data.score}/100 → ${action}`;
+        verdict.style.color = colors[data.recommended_action] || '#ece9e2';
+      } else {
+        verdict.textContent = 'Unexpected response:';
+        verdict.style.color = '#ece9e2';
+      }
+      raw.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+      resultBox.style.display = 'block';
+      verdict.textContent = 'Request failed — the scoring service did not respond.';
+      verdict.style.color = '#d96a5f';
+      raw.textContent = String(err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'SCORE THIS LEAD';
+    }
+  });
+</script>
+</body>
+</html>
